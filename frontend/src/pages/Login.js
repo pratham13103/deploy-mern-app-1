@@ -7,10 +7,12 @@ import styles from "../styles/index.module.css";
 function Login({ setIsAuthenticated }) {
     const [loginInfo, setLoginInfo] = useState({
         email: '',
-        phoneNumber: '', // Added phoneNumber field
+        phoneNumber: '',
         password: '',
     });
     const [otpSent, setOtpSent] = useState(false); // State to manage OTP notification
+    const [otp, setOtp] = useState(''); // State for OTP input
+    const [otpVerified, setOtpVerified] = useState(false); // State for OTP verification
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -19,6 +21,10 @@ function Login({ setIsAuthenticated }) {
             ...prevState,
             [name]: value,
         }));
+    };
+
+    const handleOtpChange = (e) => {
+        setOtp(e.target.value);
     };
 
     const sendOTP = async (email, phoneNumber) => {
@@ -39,6 +45,29 @@ function Login({ setIsAuthenticated }) {
             }
         } catch (err) {
             throw new Error(err.message || 'An error occurred while sending OTP');
+        }
+    };
+
+    const verifyOtp = async () => {
+        try {
+            const response = await fetch('http://localhost:8080/verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ otp, phoneNumber: loginInfo.phoneNumber }),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                setOtpVerified(true);
+                handleSuccess('OTP verified successfully');
+                navigate('/home'); // Redirect to home
+            } else {
+                handleError(result.message || 'Invalid OTP');
+            }
+        } catch (err) {
+            handleError(err.message || 'Error verifying OTP');
         }
     };
 
@@ -70,8 +99,6 @@ function Login({ setIsAuthenticated }) {
                 if (otpSent) {
                     setOtpSent(true); // Set notification state to true
                 }
-    
-                navigate('/home'); // Redirect to home
             } else if (error) {
                 const details = error?.details[0]?.message || 'An error occurred.';
                 handleError(details);
@@ -126,8 +153,24 @@ function Login({ setIsAuthenticated }) {
                 </span>
             </form>
 
+            {/* OTP input section */}
+            {otpSent && !otpVerified && (
+                <div className={styles.inputGroup}>
+                    <label htmlFor="otp" className={styles.label}>Enter OTP</label>
+                    <input
+                        onChange={handleOtpChange}
+                        type="text"
+                        name="otp"
+                        placeholder="Enter the OTP sent to your email/phone"
+                        value={otp}
+                        className={styles.input}
+                    />
+                    <button type="button" onClick={verifyOtp} className={styles.button}>Verify OTP</button>
+                </div>
+            )}
+
             {/* Display popup after OTP is sent */}
-            {otpSent && (
+            {otpSent && !otpVerified && (
                 <div className={styles.popup}>
                     <p>OTP sent successfully to your email and phone!</p>
                 </div>
