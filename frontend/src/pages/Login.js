@@ -48,7 +48,7 @@ function Login({ setIsAuthenticated }) {
         }
     };
 
-    const verifyOtp = async () => {
+    const verifyOTP = async () => {
         try {
             const response = await fetch('http://localhost:8080/verify-otp', {
                 method: 'POST',
@@ -165,7 +165,7 @@ function Login({ setIsAuthenticated }) {
                             placeholder="Enter OTP"
                             className={styles.input}
                         />
-                        <button type="button" onClick={verifyOtp} className={styles.button}>
+                        <button type="button" onClick={verifyOTP} className={styles.button}>
                             Verify OTP
                         </button>
                     </div>
