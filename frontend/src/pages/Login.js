@@ -152,25 +152,25 @@ function Login({ setIsAuthenticated }) {
                 <span className={styles.text}>
                     Don't have an account? <Link to="/Signup" className={styles.link}>Signup</Link>
                 </span>
-            </form>
 
-            {/* OTP Input Section */}
-            {otpSent && !otpVerified && (
-                <div className={styles.otpSection}>
-                    <h3>Enter OTP</h3>
-                    <input
-                        type="text"
-                        name="otp"
-                        value={otp}
-                        onChange={handleOtpChange}
-                        placeholder="Enter OTP"
-                        className={styles.input}
-                    />
-                    <button type="button" onClick={verifyOtp} className={styles.button}>
-                        Verify OTP
-                    </button>
-                </div>
-            )}
+                {/* OTP Input Section */}
+                {otpSent && !otpVerified && (
+                    <div className={styles.inputGroup}>
+                        <label htmlFor="otp" className={styles.label}>Enter OTP</label>
+                        <input
+                            type="text"
+                            name="otp"
+                            value={otp}
+                            onChange={handleOtpChange}
+                            placeholder="Enter OTP"
+                            className={styles.input}
+                        />
+                        <button type="button" onClick={verifyOtp} className={styles.button}>
+                            Verify OTP
+                        </button>
+                    </div>
+                )}
+            </form>
 
             {/* Display popup after OTP is sent */}
             {otpSent && !otpVerified && (
