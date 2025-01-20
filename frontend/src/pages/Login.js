@@ -10,9 +10,9 @@ function Login({ setIsAuthenticated }) {
         phoneNumber: '',
         password: '',
     });
-    const [otpSent, setOtpSent] = useState(false); // State to manage OTP notification
-    const [otp, setOtp] = useState(''); // State for OTP input
-    const [otpVerified, setOtpVerified] = useState(false); // State for OTP verification
+    const [otpSent, setOtpSent] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [otpVerified, setOtpVerified] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -55,19 +55,20 @@ function Login({ setIsAuthenticated }) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ otp, phoneNumber: loginInfo.phoneNumber }),
+                body: JSON.stringify({ otp, email: loginInfo.email, phoneNumber: loginInfo.phoneNumber }),
             });
-
             const result = await response.json();
+
             if (result.success) {
                 setOtpVerified(true);
-                handleSuccess('OTP verified successfully');
-                navigate('/home'); // Redirect to home
+                handleSuccess('OTP Verified Successfully!');
+                setIsAuthenticated(true);
+                navigate('/home');
             } else {
                 handleError(result.message || 'Invalid OTP');
             }
         } catch (err) {
-            handleError(err.message || 'Error verifying OTP');
+            handleError(err.message);
         }
     };
 
@@ -153,19 +154,21 @@ function Login({ setIsAuthenticated }) {
                 </span>
             </form>
 
-            {/* OTP input section */}
+            {/* OTP Input Section */}
             {otpSent && !otpVerified && (
-                <div className={styles.inputGroup}>
-                    <label htmlFor="otp" className={styles.label}>Enter OTP</label>
+                <div className={styles.otpSection}>
+                    <h3>Enter OTP</h3>
                     <input
-                        onChange={handleOtpChange}
                         type="text"
                         name="otp"
-                        placeholder="Enter the OTP sent to your email/phone"
                         value={otp}
+                        onChange={handleOtpChange}
+                        placeholder="Enter OTP"
                         className={styles.input}
                     />
-                    <button type="button" onClick={verifyOtp} className={styles.button}>Verify OTP</button>
+                    <button type="button" onClick={verifyOtp} className={styles.button}>
+                        Verify OTP
+                    </button>
                 </div>
             )}
 
