@@ -1,93 +1,141 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { handleError, handleSuccess } from '../utils';
+import styles from "../styles/index.module.css";
 
-function Login() {
-
+function Login({ setIsAuthenticated }) {
     const [loginInfo, setLoginInfo] = useState({
         email: '',
-        password: ''
-    })
-
+        phoneNumber: '', // Added phoneNumber field
+        password: '',
+    });
+    const [otpSent, setOtpSent] = useState(false); // State to manage OTP notification
     const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        console.log(name, value);
-        const copyLoginInfo = { ...loginInfo };
-        copyLoginInfo[name] = value;
-        setLoginInfo(copyLoginInfo);
-    }
+        setLoginInfo((prevState) => ({
+            ...prevState,
+            [name]: value,
+        }));
+    };
+
+    const sendOTP = async (email, phoneNumber) => {
+        try {
+            const otpResponse = await fetch('http://localhost:8080/send-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, phoneNumber }),
+            });
+
+            if (otpResponse.status === 200) {
+                return true;
+            } else {
+                const otpData = await otpResponse.json();
+                throw new Error(otpData.message || 'Failed to send OTP');
+            }
+        } catch (err) {
+            throw new Error(err.message || 'An error occurred while sending OTP');
+        }
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        const { email, password } = loginInfo;
-        if (!email || !password) {
-            return handleError('email and password are required')
+        const { email, phoneNumber, password } = loginInfo;
+        if (!email || !phoneNumber || !password) {
+            return handleError('Email, phone number, and password are required.');
         }
         try {
             const url = `https://deploy-mern-app-1-ten.vercel.app/auth/login`;
             const response = await fetch(url, {
                 method: "POST",
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(loginInfo)
+                body: JSON.stringify({ email, password }),
             });
             const result = await response.json();
-            const { success, message, jwtToken, name, error } = result;
+            const { success, message, error } = result;
+    
             if (success) {
                 handleSuccess(message);
-                localStorage.setItem('token', jwtToken);
-                localStorage.setItem('loggedInUser', name);
-                setTimeout(() => {
-                    navigate('/home')
-                }, 1000)
+                setIsAuthenticated(true); // Update authentication status
+    
+                // Send OTP notification
+                const otpSent = await sendOTP(email, phoneNumber);
+    
+                if (otpSent) {
+                    setOtpSent(true); // Set notification state to true
+                }
+    
+                navigate('/home'); // Redirect to home
             } else if (error) {
-                const details = error?.details[0].message;
+                const details = error?.details[0]?.message || 'An error occurred.';
                 handleError(details);
-            } else if (!success) {
+            } else {
                 handleError(message);
             }
-            console.log(result);
         } catch (err) {
-            handleError(err);
+            handleError(err.message);
         }
-    }
+    };
 
     return (
-        <div className='container'>
-            <h1>Login</h1>
-            <form onSubmit={handleLogin}>
-                <div>
-                    <label htmlFor='email'>Email</label>
+        <div className={styles.container}>
+            <h1 className={styles.title}>Login</h1>
+            <form onSubmit={handleLogin} className={styles.form}>
+                <div className={styles.inputGroup}>
+                    <label htmlFor="email" className={styles.label}>Email</label>
                     <input
                         onChange={handleChange}
-                        type='email'
-                        name='email'
-                        placeholder='Enter your email...'
+                        type="email"
+                        name="email"
+                        placeholder="Enter your email..."
                         value={loginInfo.email}
+                        className={styles.input}
                     />
                 </div>
-                <div>
-                    <label htmlFor='password'>Password</label>
+                <div className={styles.inputGroup}>
+                    <label htmlFor="phoneNumber" className={styles.label}>Phone Number</label>
                     <input
                         onChange={handleChange}
-                        type='password'
-                        name='password'
-                        placeholder='Enter your password...'
-                        value={loginInfo.password}
+                        type="tel"
+                        name="phoneNumber"
+                        placeholder="Enter your phone number..."
+                        value={loginInfo.phoneNumber}
+                        className={styles.input}
                     />
                 </div>
-                <button type='submit'>Login</button>
-                <span>Does't have an account ?
-                    <Link to="/signup">Signup</Link>
+                <div className={styles.inputGroup}>
+                    <label htmlFor="password" className={styles.label}>Password</label>
+                    <input
+                        onChange={handleChange}
+                        type="password"
+                        name="password"
+                        placeholder="Enter your password..."
+                        value={loginInfo.password}
+                        className={styles.input}
+                    />
+                </div>
+                <button type="submit" className={styles.button}>Login</button>
+                <span className={styles.text}>
+                    Don't have an account? <Link to="/Signup" className={styles.link}>Signup</Link>
                 </span>
             </form>
+
+            {/* Display popup after OTP is sent */}
+            {otpSent && (
+                <div className={styles.popup}>
+                    <p>OTP sent successfully to your email and phone!</p>
+                </div>
+            )}
+
             <ToastContainer />
         </div>
-    )
+    );
 }
 
-export default Login
+export default Login;
