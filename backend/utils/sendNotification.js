@@ -9,25 +9,22 @@ const snsClient = new SNSClient({
     }
 });
 
-// Function to send SMS
-const sendSMS = async (message) => {
-    const phoneNumber = '+919356567724';  // Your phone number in E.164 format
+// Function to send OTP SMS only
+const sendOTP = async (phoneNumber, otp) => {
+    const message = `Your OTP is: ${otp}. Please use this to complete your verification.`;
 
     const params = {
         Message: message,
-        PhoneNumber: phoneNumber,  // E.164 format: +919356567724
+        PhoneNumber: phoneNumber,  // E.164 format, e.g., +919356567724
     };
 
     try {
-        console.log("Sending SMS...");
+        console.log("Sending OTP SMS...");
         const data = await snsClient.send(new PublishCommand(params));
-        console.log('SMS sent:', data);
+        console.log('OTP SMS sent:', data);
     } catch (err) {
-        console.error('Error sending SMS:', err);
+        console.error('Error sending OTP SMS:', err);
     }
 };
 
-// Sending SMS to the specified phone number
-sendSMS('Hi from Pratham')
-    .then(() => console.log('SMS process complete'))
-    .catch((err) => console.error('Error in sending SMS:', err));
+module.exports = sendOTP;
